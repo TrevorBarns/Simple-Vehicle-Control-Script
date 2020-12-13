@@ -1,54 +1,44 @@
 -- C O N F I G --
-interactionDistance = 4 --The radius you have to be in to interact with the vehicle.
-lockDistance = 25 --The radius you have to be in to lock your vehicle.
+interactionDistance = 3 --The radius you have to be in to interact with the vehicle.
 
 --  V A R I A B L E S --
-engineoff = false
-saved = false
-controlsave_bool = false
+ped = nil
+inVehicle = nil
+ped_pos = nil
+inFrontOfPlayer = nil
+vehId = nil
+distanceToVeh = nil
 
 -- T R U N K --
 RegisterNetEvent('trunk')
 AddEventHandler('trunk',function() 
-	local player = GetPlayerPed(-1)
-		if controlsave_bool == true then
-			vehicle = saveVehicle
-		else
-			vehicle = GetVehiclePedIsIn(player,true)
-		end
-		
-		local isopen = GetVehicleDoorAngleRatio(vehicle,5)
-		local distanceToVeh = GetDistanceBetweenCoords(GetEntityCoords(player), GetEntityCoords(vehicle), 1)
-		
-		if distanceToVeh <= interactionDistance then
-			if (isopen == 0) then
-			SetVehicleDoorOpen(vehicle,5,0,0)
+	if GetVehicle() == true and distanceToVeh <= interactionDistance then
+		if GetVehicleDoorAngleRatio(vehId, 5) == 0 then
+			if GetVehicleDoorsLockedForPlayer(vehId) == false then
+				SetVehicleDoorOpen(vehId,5,0,0)
 			else
-			SetVehicleDoorShut(vehicle,5,0)
+				ShowNotification("~r~Vehicle is locked.")
 			end
 		else
-			ShowNotification("~r~You must be near your vehicle to do that.")
+			SetVehicleDoorShut(vehId,5,0)
 		end
+	else
+		ShowNotification("~r~You must be near your vehicle to do that.")
+	end
 end)
 
 -- H O O D --
 RegisterNetEvent('hood')
-AddEventHandler('hood',function() 
-	local player = GetPlayerPed(-1)
-	if controlsave_bool == true then
-		vehicle = saveVehicle
-	else
-		vehicle = GetVehiclePedIsIn(player,true)
-	end
-		
-	local isopen = GetVehicleDoorAngleRatio(vehicle,4)
-	local distanceToVeh = GetDistanceBetweenCoords(GetEntityCoords(player), GetEntityCoords(vehicle), 1)
-	
-	if distanceToVeh <= interactionDistance then
-		if (isopen == 0) then
-		SetVehicleDoorOpen(vehicle,4,0,0)
+AddEventHandler('hood',function()
+	if GetVehicle() == true and distanceToVeh <= interactionDistance then
+		if GetVehicleDoorAngleRatio(vehId, 4) == 0 then
+			if GetVehicleDoorsLockedForPlayer(vehId) == false then
+				SetVehicleDoorOpen(vehId,4,0,0)
+			else
+				ShowNotification("~r~Vehicle is locked.")
+			end
 		else
-		SetVehicleDoorShut(vehicle,4,0)
+			SetVehicleDoorShut(vehId,4,0)
 		end
 	else
 		ShowNotification("~r~You must be near your vehicle to do that.")
@@ -57,40 +47,50 @@ end)
 
 RegisterNetEvent('ChangeDoor')
 AddEventHandler('ChangeDoor',function(door) 
-	print("netevent changedoor receieved")
-	local player = GetPlayerPed(-1)
-	local vehicle = GetVehiclePedIsIn(player,true)
-	
-	local fd = GetVehicleDoorAngleRatio(vehicle,0)
-	local fp = GetVehicleDoorAngleRatio(vehicle,1)
-	local rd = GetVehicleDoorAngleRatio(vehicle,2)
-	local rp = GetVehicleDoorAngleRatio(vehicle,3)
-	local distanceToVeh = GetDistanceBetweenCoords(GetEntityCoords(player), GetEntityCoords(vehicle), 1)
-	
-	if (distanceToVeh <= interactionDistance) then
+	if GetVehicle() == true and distanceToVeh <= interactionDistance then
+		local fd = GetVehicleDoorAngleRatio(vehId,0)
+		local fp = GetVehicleDoorAngleRatio(vehId,1)
+		local rd = GetVehicleDoorAngleRatio(vehId,2)
+		local rp = GetVehicleDoorAngleRatio(vehId,3)
 		if (door == 0) then
 			if (fd > 0) then
-				SetVehicleDoorShut(vehicle,0,0)
+				SetVehicleDoorShut(vehId,0,0)
 			else
-				SetVehicleDoorOpen(vehicle,0,0,0)
+				if GetVehicleDoorsLockedForPlayer(vehId) == false then
+					SetVehicleDoorOpen(vehId,0,0,0)
+				else
+					ShowNotification("~r~Vehicle is locked.")
+				end
 			end
 		elseif (door == 1) then
 			if (fp > 0) then
-				SetVehicleDoorShut(vehicle,1,0)
+				SetVehicleDoorShut(vehId,1,0)
 			else
-				SetVehicleDoorOpen(vehicle,1,0,0)
+				if GetVehicleDoorsLockedForPlayer(vehId) == false then
+					SetVehicleDoorOpen(vehId,1,0,0)
+				else
+					ShowNotification("~r~Vehicle is locked.")
+				end
 			end
 		elseif (door == 2) then
 			if (rd > 0) then
-				SetVehicleDoorShut(vehicle,2,0)
+				SetVehicleDoorShut(vehId,2,0)
 			else
-				SetVehicleDoorOpen(vehicle,2,0,0)
+				if GetVehicleDoorsLockedForPlayer(vehId) == false then
+					SetVehicleDoorOpen(vehId,2,0,0)
+				else
+					ShowNotification("~r~Vehicle is locked.")
+				end
 			end	
 		elseif (door == 3) then
 			if (rp > 0) then
-				SetVehicleDoorShut(vehicle,3,0)
+				SetVehicleDoorShut(vehId,3,0)
 			else
-				SetVehicleDoorOpen(vehicle,3,0,0)
+				if GetVehicleDoorsLockedForPlayer(vehId) == false then
+					SetVehicleDoorOpen(vehId,3,0,0)
+				else
+					ShowNotification("~r~Vehicle is locked.")
+				end
 			end
 		end
 	else
@@ -99,8 +99,45 @@ AddEventHandler('ChangeDoor',function(door)
 end)
 
 
+function GetVehicle()
+	ped = GetPlayerPed(PlayerId())
+	inVehicle = IsPedInAnyVehicle(ped, true)
+	ped_pos = nil
+	inFrontOfPlayer = nil
+	vehId = nil
+	distanceToVeh = nil
+	
+	if not inVehicle then
+		ped_pos = GetEntityCoords(ped)
+		inFrontOfPlayer = GetOffsetFromEntityInWorldCoords( ped, 0.0, interactionDistance, 0.0 )
+		vehId = GetVehicleInDirection( ped, ped_pos, inFrontOfPlayer )
+		if vehId ~= nil then
+			distanceToVeh = GetDistanceBetweenCoords(GetEntityCoords(ped), GetEntityCoords(vehId), 1)
+		end
+	else
+		vehId = GetVehiclePedIsIn(ped, true)
+		distanceToVeh = GetDistanceBetweenCoords(GetEntityCoords(ped), GetEntityCoords(vehicle), 1)
+	end
+	
+	if distanceToVeh ~= nil then
+		return true
+	else
+		return false
+	end
+end
+
 function ShowNotification( text )
     SetNotificationTextEntry( "STRING" )
     AddTextComponentString( text )
     DrawNotification( false, false )
+end
+
+-- Credit to Konijima
+function GetVehicleInDirection( entFrom, coordFrom, coordTo )
+	local rayHandle = StartShapeTestCapsule( coordFrom.x, coordFrom.y, coordFrom.z, coordTo.x, coordTo.y, coordTo.z, interactionDistance+0.0, 10, entFrom, 7 )
+    local _, _, _, _, vehicle = GetShapeTestResult( rayHandle )
+    
+    if ( IsEntityAVehicle( vehicle ) ) then 
+        return vehicle
+    end 
 end
