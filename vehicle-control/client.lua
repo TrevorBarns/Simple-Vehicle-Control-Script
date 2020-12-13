@@ -108,6 +108,7 @@ function GetVehicle()
 	distanceToVeh = nil
 	
 	if not inVehicle then
+	if not inVehicle then
 		ped_pos = GetEntityCoords(ped)
 		inFrontOfPlayer = GetOffsetFromEntityInWorldCoords( ped, 0.0, interactionDistance, 0.0 )
 		vehId = GetVehicleInDirection( ped, ped_pos, inFrontOfPlayer )
@@ -116,7 +117,7 @@ function GetVehicle()
 		end
 	else
 		vehId = GetVehiclePedIsIn(ped, true)
-		distanceToVeh = GetDistanceBetweenCoords(GetEntityCoords(ped), GetEntityCoords(vehicle), 1)
+		distanceToVeh = GetDistanceBetweenCoords(GetEntityCoords(ped), GetEntityCoords(vehId), 1)
 	end
 	
 	if distanceToVeh ~= nil then
